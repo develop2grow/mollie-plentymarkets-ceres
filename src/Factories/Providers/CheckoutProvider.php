@@ -94,6 +94,55 @@ class CheckoutProvider extends OrderFactoryProvider
             $basketAmount = $basket->basketAmountNet;
         }
 
+        $difference = 0;
+
+        $lineAmount = 0;
+        $vatRate = 0.00;
+
+        // Check Line Amounts
+        foreach ($basket->basketItems as $basketItem) {
+            if ($basketItem instanceof BasketItem) {
+
+                $basketItemPrice = $basketItem->price;
+                if ($isNet) {
+                    $basketItemPrice = round($basketItem->price * 100 / (100.0 + $basketItem->vat), 2);
+                }
+                $vatRate = max($basketItem->vat, $vatRate);
+                $lineAmount += $basketItemPrice;
+            }
+        }
+
+
+        // Shipping
+        $shippingAmount = $basket->shippingAmount;
+        if ($isNet) {
+            $shippingAmount = $basket->shippingAmountNet;
+        }
+
+        $lineAmount += $shippingAmount;
+
+        // Coupon
+        $couponDiscount = 0;
+        if ($basket->couponDiscount != 0.00) {
+
+            $couponDiscount = $basket->couponDiscount;
+            if ($isNet) {
+                $couponDiscount = round($basket->couponDiscount * 100 / (100.0 + $vatRate), 2);
+            }
+        }
+
+        $lineAmount -= $couponDiscount;
+
+        if($lineAmount > $basketAmount){
+
+            $difference = $lineAmount - $basketAmount;
+
+        } elseif($lineAmount < $basketAmount){
+
+            $difference = $lineAmount - $basketAmount;
+        }
+        $shippingAmount =- $difference;
+
         $orderData = [
             'amount'          => [
                 'currency' => $basket->currency,
@@ -149,11 +198,6 @@ class CheckoutProvider extends OrderFactoryProvider
             $orderData['consumerDateOfBirth'] = date('Y-m-d', $billingAddress->birthday);
         }
 
-        $isNet = false;
-        if (!count($vatService->getCurrentTotalVats())) {
-            $isNet = true;
-        }
-
         $vatRate = 0.00;
         foreach ($basket->basketItems as $basketItem) {
             if ($basketItem instanceof BasketItem) {
@@ -205,10 +249,6 @@ class CheckoutProvider extends OrderFactoryProvider
             }
         }
 
-        $shippingAmount = $basket->shippingAmount;
-        if ($isNet) {
-            $shippingAmount = $basket->shippingAmountNet;
-        }
 
         //shippingcosts
         $orderData['lines'][] = [
@@ -239,11 +279,6 @@ class CheckoutProvider extends OrderFactoryProvider
 
         if ($basket->couponDiscount != 0.00) {
 
-            $couponDiscount = $basket->couponDiscount;
-            if ($isNet) {
-                $couponDiscount = round($basket->couponDiscount * 100 / (100.0 + $vatRate), 2);
-            }
-
             //coupon
             $orderData['lines'][] = [
                 'sku'            => '0',
@@ -270,6 +305,7 @@ class CheckoutProvider extends OrderFactoryProvider
                     'value'    => $isNet ? '0.00' : number_format(($basket->couponDiscount * ($vatRate / (100.0 + $vatRate))), 2, '.', ''),
                 ]
             ];
+
         }
 
         return $orderData;
