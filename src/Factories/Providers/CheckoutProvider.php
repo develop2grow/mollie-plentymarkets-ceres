@@ -84,10 +84,20 @@ class CheckoutProvider extends OrderFactoryProvider
             }
         }
 
+        $isNet = false;
+        if (!count($vatService->getCurrentTotalVats())) {
+            $isNet = true;
+        }
+
+        $basketAmount = $basket->basketAmount;
+        if ($isNet) {
+            $basketAmount = $basket->basketAmountNet;
+        }
+
         $orderData = [
             'amount'          => [
                 'currency' => $basket->currency,
-                'value'    => number_format($basket->basketAmount, 2, '.', ''),
+                'value'    => number_format($basketAmount, 2, '.', ''),
             ],
             'billingAddress'  => [
                 'organizationName' => $billingAddress->companyName,

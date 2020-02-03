@@ -41,6 +41,7 @@ class OrderProvider extends OrderFactoryProvider
 
         $domain = $this->getDomain();
 
+
         $orderData = [
             'amount'          => [
                 'currency' => $orderAmount->currency,
