@@ -185,7 +185,7 @@ class PaymentController extends Controller
         $result = $orderService->preparePayment($checkout->getPaymentMethodId(), $request->get('mollie-cc-token'));
 
         $this->getLogger('checkCreditCard')->error(
-            'Mollie::Debug.checkCreditCard',
+            'Mollie::Error.checkCreditCard',
             ['redirect' => $lang . $checkoutUrl]
         );
 
