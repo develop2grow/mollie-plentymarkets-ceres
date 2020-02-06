@@ -2,6 +2,7 @@
 
 namespace Mollie\Controllers;
 
+use IO\Extensions\Constants\ShopUrls;
 use Mollie\Api\ApiClient;
 use Mollie\Contracts\TransactionRepositoryContract;
 use Mollie\Helpers\CeresHelper;
@@ -166,6 +167,7 @@ class PaymentController extends Controller
      * @param CeresHelper $ceresHelper
      * @param Translator $translator
      * @param OrderService $orderService
+     * @param ShopUrls $shopUrls
      * @return \Symfony\Component\HttpFoundation\Response
      * @throws \Exception
      */
@@ -175,13 +177,17 @@ class PaymentController extends Controller
                                             Checkout $checkout,
                                             CeresHelper $ceresHelper,
                                             Translator $translator,
-                                            OrderService $orderService)
+                                            OrderService $orderService,
+                                            ShopUrls $shopUrls)
     {
         $lang   = $frontendSessionStorageFactory->getLocaleSettings()->language;
+
+        $checkoutUrl = $shopUrls->checkout;
         $result = $orderService->preparePayment($checkout->getPaymentMethodId(), $request->get('mollie-cc-token'));
+
         if (array_key_exists('error', $result) || empty($result['_links']['checkout']['href'])) {
             $ceresHelper->pushNotification($translator->trans('Mollie::Errors.failed'));
-            return $response->redirectTo($lang . '/checkout');
+            return $response->redirectTo($lang . $checkoutUrl);
         } else {
             return $response->redirectTo($lang . '/place-order');
         }
