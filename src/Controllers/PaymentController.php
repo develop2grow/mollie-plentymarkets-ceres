@@ -179,15 +179,17 @@ class PaymentController extends Controller
                                             OrderService $orderService,
                                             ShopUrls $shopUrls)
     {
+        $this->getLogger('checkCreditCard')->error(
+            'Mollie::Error.checkCreditCard',
+            ['createOrderByCreditCard' => true]
+        );
+
         $lang   = $frontendSessionStorageFactory->getLocaleSettings()->language;
 
         $checkoutUrl = $shopUrls->checkout;
         $result = $orderService->preparePayment($checkout->getPaymentMethodId(), $request->get('mollie-cc-token'));
 
-        $this->getLogger('checkCreditCard')->error(
-            'Mollie::Error.checkCreditCard',
-            ['redirect' => $lang . $checkoutUrl]
-        );
+
 
         if (array_key_exists('error', $result) || empty($result['_links']['checkout']['href'])) {
             $ceresHelper->pushNotification($translator->trans('Mollie::Errors.failed'));
