@@ -2,6 +2,7 @@
 
 namespace Mollie\Controllers;
 
+use IO\Extensions\Constants\ShopUrls;
 use Mollie\Api\ApiClient;
 use Mollie\Contracts\TransactionRepositoryContract;
 use Mollie\Helpers\CeresHelper;
