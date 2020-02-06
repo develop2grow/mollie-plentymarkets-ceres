@@ -185,6 +185,11 @@ class PaymentController extends Controller
         $checkoutUrl = $shopUrls->checkout;
         $result = $orderService->preparePayment($checkout->getPaymentMethodId(), $request->get('mollie-cc-token'));
 
+        $this->getLogger('checkCreditCard')->error(
+            'Mollie::Debug.checkCreditCard',
+            ['redirect' => $lang . $checkoutUrl]
+        );
+
         if (array_key_exists('error', $result) || empty($result['_links']['checkout']['href'])) {
             $ceresHelper->pushNotification($translator->trans('Mollie::Errors.failed'));
             return $response->redirectTo($lang . $checkoutUrl);
