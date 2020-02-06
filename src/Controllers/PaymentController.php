@@ -157,7 +157,6 @@ class PaymentController extends Controller
         $frontendSessionStorageFactory->getPlugin()->setValue('mollie_apple_pay_active', true);
         return [];
     }
-
     /**
      * @param FrontendSessionStorageFactoryContract $frontendSessionStorageFactory
      * @param Request $request
@@ -166,6 +165,7 @@ class PaymentController extends Controller
      * @param CeresHelper $ceresHelper
      * @param Translator $translator
      * @param OrderService $orderService
+     * @param ShopUrls $shopUrls
      * @return \Symfony\Component\HttpFoundation\Response
      * @throws \Exception
      */
@@ -175,13 +175,22 @@ class PaymentController extends Controller
                                             Checkout $checkout,
                                             CeresHelper $ceresHelper,
                                             Translator $translator,
-                                            OrderService $orderService)
+                                            OrderService $orderService,
+                                            ShopUrls $shopUrls)
     {
         $lang   = $frontendSessionStorageFactory->getLocaleSettings()->language;
+
+        $checkoutUrl = $shopUrls->checkout;
         $result = $orderService->preparePayment($checkout->getPaymentMethodId(), $request->get('mollie-cc-token'));
+
+        $this->getLogger('checkCreditCard')->error(
+            'Mollie::Debug.checkCreditCard',
+            ['redirect' => $lang . $checkoutUrl]
+        );
+
         if (array_key_exists('error', $result) || empty($result['_links']['checkout']['href'])) {
             $ceresHelper->pushNotification($translator->trans('Mollie::Errors.failed'));
-            return $response->redirectTo($lang . '/checkout');
+            return $response->redirectTo($lang . $checkoutUrl);
         } else {
             return $response->redirectTo($lang . '/place-order');
         }
